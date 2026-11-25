@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Expedition Proportia</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0b2e44;--sea:#11688d;--sea2:#1d8db5;--sand:#f1e4c2;--parch:#fdf8ec;--card:#fffdf6;--gold:#e5a823;--gold2:#ffcf4d;--ok:#1f8f55;--okbg:#ddf4e6;--bad:#c93a31;--badbg:#fde4e1;--hint:#9a5c00;--hintbg:#fff0d2;--solc:#174f9c;--solbg:#e3eeff;--ink:#1d2933;--mut:#5d6b75;--line:#d8c9a3}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;font-family:Nunito,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:var(--navy);touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-text-size-adjust:100%}
+input{-webkit-user-select:text;user-select:text}
+body{display:flex;flex-direction:column;height:100vh;height:100dvh}
+button{font-family:inherit;cursor:pointer;touch-action:manipulation}
+header{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:8px 12px;padding-top:max(8px,env(safe-area-inset-top));background:var(--navy);color:#fff}
+.brand{font-weight:900;font-size:20px;white-space:nowrap;line-height:1.1}
+.brand small{display:block;font-weight:700;font-size:12px;opacity:.7}
+.spacer{flex:1}
+.hname{font-weight:800;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+.hbtn{border:0;background:rgba(255,255,255,.13);color:#fff;font-weight:800;font-size:16px;padding:9px 13px;border-radius:12px;white-space:nowrap}
+.hbtn:active{background:rgba(255,255,255,.25)}
+.coins{background:linear-gradient(180deg,var(--gold2),var(--gold));color:#4a3200;font-weight:900;font-size:17px;padding:7px 13px;border-radius:99px;white-space:nowrap}
+main{flex:1;min-height:0;position:relative}
+.screen{position:absolute;inset:0}
+.hidden{display:none!important}
+
+/* MAP */
+#scrMap{background:#0f5f84;overflow:hidden}
+#scrMap svg{width:100%;height:100%;display:block}
+.isl{cursor:pointer}
+.isl.locked{opacity:.55}
+.mlabel{font-weight:900;font-size:22px;fill:#fff;paint-order:stroke;stroke:#0b2e44;stroke-width:5px;stroke-linejoin:round}
+.mstat{font-weight:800;font-size:18px;fill:#fff8e0;paint-order:stroke;stroke:#0b2e44;stroke-width:4px}
+.mtopic{font-weight:800;font-size:15px;fill:#d8f1ff;paint-order:stroke;stroke:#0b2e44;stroke-width:4px}
+.mapinfo{position:absolute;left:12px;top:12px;background:rgba(255,253,246,.95);border-radius:16px;padding:10px 14px;box-shadow:0 4px 16px rgba(0,0,0,.25);max-width:310px}
+.mapinfo h2{margin:0 0 4px;font-size:19px}
+.mapinfo p{margin:4px 0;font-size:15px;color:var(--mut)}
+.pieces{display:flex;gap:6px;margin:6px 0 2px}
+.piece{width:40px;height:40px;border-radius:10px;border:2px dashed #b9a676;display:flex;align-items:center;justify-content:center;font-size:22px;background:#f5ecd2}
+.piece.got{border:2px solid var(--gold);background:#fff4cc}
+
+/* LEVEL */
+#scrLevel{background:var(--sand);display:flex;flex-direction:column;padding:10px 12px 12px;gap:10px}
+.lvhead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.lvtitle{font-weight:900;font-size:20px;white-space:nowrap}
+.lvtitle span{font-weight:700;color:var(--mut);font-size:16px}
+.prog{flex:1;min-width:150px;height:18px;background:#e2d0a2;border-radius:99px;overflow:hidden;position:relative}
+.prog>div{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));width:0;transition:width .4s}
+.pcount{font-weight:900;font-size:17px;white-space:nowrap}
+.lvbody{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:12px}
+.card{background:var(--card);border-radius:18px;box-shadow:0 2px 0 var(--line),0 6px 20px rgba(0,0,0,.07);padding:14px 20px;overflow:auto;min-height:0;-webkit-overflow-scrolling:touch}
+.panel{display:flex;flex-direction:column;gap:10px;min-height:0}
+#fb{flex:1;min-height:80px;overflow:auto;background:var(--card);border-radius:16px;padding:12px 14px;font-size:16.5px;line-height:1.4;border:2.5px solid transparent;box-shadow:0 2px 0 var(--line)}
+#fb.ok{background:var(--okbg);border-color:var(--ok)}
+#fb.bad{background:var(--badbg);border-color:var(--bad)}
+#fb.sol{background:var(--solbg);border-color:var(--solc)}
+#fb .hint{margin-top:8px;background:var(--hintbg);color:var(--hint);border-radius:10px;padding:8px 10px;font-weight:700}
+#fb table.vt{font-size:16px}
+#fb table.vt td,#fb table.vt th{padding:4px 8px;min-width:0;height:auto}
+.big{font-size:22px;font-weight:900}
+.pad{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.pad button{height:56px;font-size:25px;font-weight:900;border:0;border-radius:14px;background:#fff;color:var(--ink);box-shadow:0 3px 0 #cbbd98}
+.pad button:active{transform:translateY(2px);box-shadow:0 1px 0 #cbbd98}
+.pad button.fn{background:#e9dfc4;font-size:18px}
+.pad button.w2{grid-column:span 2}
+.act{width:100%;height:62px;font-size:21px;font-weight:900;border:0;border-radius:15px;background:var(--sea);color:#fff;box-shadow:0 4px 0 #0a4660}
+.act:active{transform:translateY(2px);box-shadow:0 2px 0 #0a4660}
+.act.go{background:var(--ok);box-shadow:0 4px 0 #126238}
+.choices{display:flex;flex-direction:column;gap:9px}
+.choices button{min-height:56px;font-size:18px;font-weight:800;border:2.5px solid #cbbd98;border-radius:14px;background:#fff;color:var(--ink);padding:8px 12px;text-align:center;line-height:1.25}
+.choices button.ok{background:var(--okbg);border-color:var(--ok);color:var(--ok)}
+.choices button.bad{background:var(--badbg);border-color:var(--bad);color:var(--bad)}
+.choices button:disabled{opacity:.9}
+.choices.long button{text-align:left;font-size:16.5px}
+.sbtn{width:100%;height:50px;font-size:17px;font-weight:800;border:2.5px solid #cbbd98;border-radius:14px;background:#fff}
+
+/* task content */
+.kind{display:inline-flex;gap:8px;align-items:center;background:var(--navy);color:#fff;font-weight:800;font-size:14px;padding:4px 12px;border-radius:99px;margin-bottom:8px}
+.kind .part{background:var(--gold);color:#3a2700;border-radius:99px;padding:0 8px}
+.lead{font-size:19px;font-weight:800;margin:4px 0 10px}
+.story{font-size:19px;line-height:1.45;margin:4px 0 12px;background:#f7efd9;border-left:6px solid var(--gold);padding:10px 14px;border-radius:0 12px 12px 0}
+.mut{color:var(--mut);font-size:16px;margin:8px 0}
+.ctxline{font-weight:800;color:var(--sea);margin:0 0 6px;font-size:16px}
+.scen{background:#f7efd9;border-radius:16px;padding:18px 20px;margin-top:6px;border:2px solid var(--line)}
+.scen-t{font-size:24px;font-weight:900;margin-bottom:6px}
+.scen-d{font-size:19px;color:#3d4a53}
+.stmt{font-size:22px;font-weight:800;line-height:1.4;background:#f7efd9;border-radius:16px;padding:18px 20px;border:2px solid var(--line)}
+table.vt{border-collapse:collapse;margin:6px 0 10px;font-size:20px;font-weight:800}
+table.vt th,table.vt td{border:2px solid #c6b385;padding:6px 10px;text-align:center;min-width:64px;height:54px}
+table.vt th{background:#efe0b8;font-size:16px;text-align:left;min-width:0}
+table.vt tr.qrow th,table.vt tr.qrow td{background:#eef6fb;color:var(--sea)}
+table.vt td.l{text-align:left}
+.qm{color:var(--bad);font-weight:900}
+.slot{display:inline-flex;align-items:center;justify-content:center;min-width:78px;height:46px;padding:0 8px;border:2.5px dashed #7d9aa8;border-radius:11px;background:#fff;font-weight:900;font-size:22px;vertical-align:middle;cursor:pointer;color:var(--ink)}
+td .slot{min-width:66px}
+.slot.act{border-style:solid;border-color:var(--sea2);box-shadow:0 0 0 4px rgba(29,141,181,.28)}
+.slot.ok{border:2.5px solid var(--ok);background:var(--okbg);color:var(--ok)}
+.slot.bad{border:2.5px solid var(--bad);background:var(--badbg);color:var(--bad)}
+.slot.sol{border:2.5px solid var(--solc);background:var(--solbg);color:var(--solc)}
+.u{font-weight:800;margin-left:4px;font-size:19px}
+.ansline{font-size:21px;font-weight:800;margin:12px 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ds{display:grid;grid-template-columns:auto 54px auto;justify-content:start;align-items:center;row-gap:2px;column-gap:6px;font-size:21px;font-weight:800;margin:6px 0 4px 4px}
+.dsl,.dsr{background:#fff;border:2px solid #c6b385;border-radius:12px;padding:6px 12px;min-height:54px;display:flex;align-items:center;gap:4px}
+.dsm{text-align:center;color:var(--sea);font-size:24px}
+.dsop{color:var(--sea);font-size:18px;padding-left:16px;font-weight:900}
+.opgrid{display:grid;grid-template-columns:auto auto auto auto;align-items:center;gap:10px 12px;font-size:21px;font-weight:800;margin:8px 0}
+.opgrid .lab{font-size:16px;color:var(--mut)}
+.opc{background:#fff;border:2px solid #c6b385;border-radius:12px;padding:6px 14px;min-height:54px;display:flex;align-items:center;justify-content:center;min-width:90px}
+.oparr{color:var(--sea);display:flex;align-items:center;gap:6px}
+.oparr .same{font-size:15px;color:var(--mut);font-weight:700}
+.formula{font-size:28px;font-weight:900;color:var(--sea);margin:6px 0 12px}
+.qline{font-size:21px;font-weight:800;margin:10px 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.offers{display:flex;gap:12px;flex-wrap:wrap;margin:6px 0 10px}
+.offer{flex:1;min-width:200px;background:#f7efd9;border:2px solid var(--line);border-radius:14px;padding:12px 14px;font-size:19px}
+.offer b{display:block;font-size:20px;margin-bottom:4px}
+.graph{display:block;width:100%;max-width:640px;max-height:calc(100dvh - 330px);min-height:220px;margin:4px auto}
+.gl{stroke:#ddd2b8;stroke-width:1}
+.ax{stroke:#2a3540;stroke-width:2.2}
+.tl{font-size:13.5px;fill:#2a3540;font-weight:800;font-family:Nunito,system-ui,sans-serif}
+.at{font-size:14px;fill:var(--sea);font-weight:900;font-family:Nunito,system-ui,sans-serif}
+.ln{fill:none;stroke:#c93a31;stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round}
+.pt{fill:#11688d;stroke:#fff;stroke-width:2}
+.pp{fill:#11688d;stroke:#fff;stroke-width:2.5}
+.pp.ok{fill:var(--ok)} .pp.bad{fill:var(--bad)} .pp.sol{fill:#fff;stroke:var(--solc);stroke-width:4}
+.solline{stroke:var(--ok);stroke-width:3;stroke-dasharray:8 6}
+svg.plot{cursor:crosshair;touch-action:none}
+.minis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mini{text-align:center;font-weight:900;font-size:18px}
+.mini .graph{min-height:0;max-height:calc(100dvh - 420px)}
+.flex2{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+
+/* MODAL */
+.modal{position:fixed;inset:0;background:rgba(5,20,30,.62);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.mbox{background:var(--parch);border-radius:22px;max-width:760px;width:100%;max-height:92vh;max-height:92dvh;overflow:auto;padding:20px 24px;box-shadow:0 10px 40px rgba(0,0,0,.4)}
+.mbox h2{margin:0 0 10px;font-size:26px}
+.mbox h3{margin:14px 0 6px;font-size:19px;color:var(--sea)}
+.mbox p,.mbox li{font-size:17px;line-height:1.45}
+.mbtns{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.mbtn{flex:1;min-width:150px;height:56px;font-size:18px;font-weight:900;border:0;border-radius:14px;background:var(--sea);color:#fff}
+.mbtn.sec{background:#e5d9b8;color:var(--ink)}
+.mbtn.red{background:var(--bad)}
+.tin{width:100%;height:54px;font-size:20px;font-weight:800;border:2.5px solid #c6b385;border-radius:12px;padding:0 14px;font-family:inherit;background:#fff}
+.err{color:var(--bad);font-weight:800;min-height:22px;margin-top:6px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.tabs button{border:0;border-radius:99px;padding:8px 14px;font-weight:800;font-size:15px;background:#e5d9b8}
+.tabs button.on{background:var(--sea);color:#fff}
+.merk{background:#fff;border:2.5px solid var(--gold);border-radius:14px;padding:10px 16px;margin:8px 0}
+.warn{background:var(--badbg);border-radius:12px;padding:8px 12px;font-weight:800;color:var(--bad)}
+.ttab{width:100%;border-collapse:collapse;font-size:16px}
+.ttab td,.ttab th{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left;vertical-align:middle}
+.tog{border:0;border-radius:99px;padding:8px 12px;font-weight:900;font-size:15px;min-width:118px}
+.tog.on{background:var(--okbg);color:var(--ok)}
+.tog.off{background:#eee;color:#777}
+.smallbtn{border:0;border-radius:10px;padding:8px 10px;font-weight:800;font-size:14px;background:#e5d9b8}
+.seg{display:inline-flex;gap:4px;flex-wrap:wrap}
+.seg button{border:0;border-radius:10px;padding:8px 13px;font-weight:900;font-size:16px;background:#e5d9b8}
+.seg button.on{background:var(--sea);color:#fff}
+.cert{border:6px double var(--gold);border-radius:18px;padding:18px;text-align:center;background:#fffaf0}
+.cert .nm{font-size:30px;font-weight:900;color:var(--sea);margin:6px 0}
+.stars{color:var(--gold);font-size:24px;letter-spacing:2px}
+
+@media (orientation:portrait),(max-width:880px){
+  .lvbody{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto}
+  .panel{display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,330px);grid-template-rows:auto auto;gap:10px}
+  #fb{grid-column:1;grid-row:1 / span 2;min-height:0;max-height:300px}
+  #padwrap{grid-column:2;grid-row:1}
+  #actions{grid-column:2;grid-row:2}
+  .pad button{height:50px}
+  .graph{max-height:calc(100dvh - 560px);min-height:240px}
+  .mini .graph{max-height:none;min-height:0}
+}
+@media (max-width:560px){
+  .panel{grid-template-columns:1fr}
+  #fb,#padwrap,#actions{grid-column:1;grid-row:auto}
+  .brand small,.hname{display:none}
+  .minis{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">⚓ Expedition Proportia<small>Proportionale Zuordnungen · Klasse 7</small></div>
+  <div class="spacer"></div>
+  <div class="hname" id="hName"></div>
+  <div class="coins" id="coins">🪙 0</div>
+  <button class="hbtn hidden" id="bMap">🗺️ Karte</button>
+  <button class="hbtn" id="bLog">📜 Logbuch</button>
+  <button class="hbtn" id="bTeach" aria-label="Lehrkraftmodus">🔒</button>
+</header>
+<main>
+  <section id="scrMap" class="screen"></section>
+  <section id="scrLevel" class="screen hidden">
+    <div class="lvhead">
+      <div class="lvtitle" id="lvTitle"></div>
+      <div class="prog"><div id="progBar"></div></div>
+      <div class="pcount" id="pCount"></div>
+    </div>
+    <div class="lvbody">
+      <div class="card" id="task"></div>
+      <div class="panel">
+        <div id="fb"></div>
+        <div id="padwrap"></div>
+        <div id="actions"></div>
+      </div>
+    </div>
+  </section>
+</main>
+<div id="modal" class="modal hidden"><div class="mbox" id="mbox"></div></div>
+
+<script>
+'use strict';
+/* ================= HILFSFUNKTIONEN ================= */
+const R=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const r2=n=>Math.round(n*100)/100;
+const F=n=>String(r2(n)).replace('.',',');
+const E=n=>r2(n).toFixed(2).replace('.',',')+' €';
+const num=s=>{if(s==null)return NaN;s=String(s).trim().replace(',','.');if(s===''||s==='.')return NaN;return Number(s);};
+const same=(a,b)=>Math.abs(a-b)<0.006;
+const isNice=q=>Math.abs(q*100-Math.round(q*100))<1e-6;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const SL=i=>`<span class="slot" data-s="${i}"></span>`;
+const Ft=(c,y)=>c.money?r2(y).toFixed(2).replace('.',','):F(y);
+const V=(c,y)=>c.money?E(y):F(y)+' '+c.yu;
+const U=c=>`<span class="u">${c.yu}</span>`;
+const UX=c=>`<span class="u">${c.xu}</span>`;
+const perUnit=c=>c.x1.replace(/^1 /,'');
+
+/* ================= SACHKONTEXTE ================= */
+const money=(id,xl,xu,x1,ks)=>({id,xl,yl:'Preis (€)',xu,x1,yu:'€',y1:'1 €',money:true,ks,
+  g:(a,y)=>`${a} ${xu} kosten ${E(y)}.`,
+  q:b=>`Wie viel kosten ${b} ${xu}?`,
+  qr:y=>`Wie viele ${xu} bekommt man für ${E(y)}?`,
+  km:k=>`${x1} kostet ${E(k)}.`});
+const CTX=[
+  money('brot','Brote (Stück)','Brote','1 Brot',[0.8,0.9,1.1,1.2,1.5,2.5]),
+  money('wasser','Trinkwasser (Liter)','Liter Trinkwasser','1 Liter Trinkwasser',[0.4,0.5,0.6,0.8,1.2]),
+  money('seil','Seil (m)','Meter Seil','1 Meter Seil',[0.9,1.5,1.8,2,2.4,3]),
+  money('diesel','Diesel (Liter)','Liter Diesel','1 Liter Diesel',[1.6,1.7,1.8,1.9]),
+  money('bananen','Bananen (kg)','kg Bananen','1 kg Bananen',[0.9,1.2,1.5,1.8,2]),
+  money('karten','Postkarten (Stück)','Postkarten','1 Postkarte',[0.5,0.6,0.7,0.9,1.2]),
+  money('tuch','Segeltuch (m²)','m² Segeltuch','1 m² Segeltuch',[6.5,8,9.5,12,15]),
+  {id:'fahrt',xl:'Fahrzeit (h)',yl:'Strecke (Seemeilen)',xu:'Stunden',x1:'1 Stunde',yu:'Seemeilen',y1:'1 Seemeile',ks:[6,8,9,12,14,15],
+   g:(a,y)=>`Das Schiff fährt immer gleich schnell. In ${a} Stunden schafft es ${F(y)} Seemeilen.`,
+   q:b=>`Wie viele Seemeilen schafft es in ${b} Stunden?`,
+   qr:y=>`Wie viele Stunden braucht es für ${F(y)} Seemeilen?`,
+   km:k=>`In 1 Stunde fährt das Schiff ${F(k)} Seemeilen.`},
+  {id:'pumpe',xl:'Zeit (min)',yl:'Wasser (Liter)',xu:'Minuten',x1:'1 Minute',yu:'Liter',y1:'1 Liter',ks:[8,12,15,18,25,40],
+   g:(a,y)=>`Eine Pumpe holt gleichmäßig Wasser aus dem Boot: in ${a} Minuten ${F(y)} Liter.`,
+   q:b=>`Wie viele Liter schafft sie in ${b} Minuten?`,
+   qr:y=>`Wie viele Minuten braucht sie für ${F(y)} Liter?`,
+   km:k=>`Die Pumpe schafft ${F(k)} Liter in 1 Minute.`},
+  {id:'pfannkuchen',xl:'Pfannkuchen (Stück)',yl:'Mehl (g)',xu:'Pfannkuchen',x1:'1 Pfannkuchen',yu:'g',y1:'1 g Mehl',ks:[25,35,40,50,60],
+   g:(a,y)=>`Der Schiffskoch braucht für ${a} Pfannkuchen ${F(y)} g Mehl.`,
+   q:b=>`Wie viel Mehl braucht er für ${b} Pfannkuchen?`,
+   qr:y=>`Für wie viele Pfannkuchen reichen ${F(y)} g Mehl?`,
+   km:k=>`Für 1 Pfannkuchen braucht man ${F(k)} g Mehl.`},
+  {id:'lampe',xl:'Brenndauer (h)',yl:'Öl (ml)',xu:'Stunden',x1:'1 Stunde',yu:'ml',y1:'1 ml Öl',ks:[15,20,25,30,45],
+   g:(a,y)=>`Eine Öllampe verbraucht in ${a} Stunden ${F(y)} ml Öl.`,
+   q:b=>`Wie viel Öl verbraucht sie in ${b} Stunden?`,
+   qr:y=>`Wie viele Stunden brennt sie mit ${F(y)} ml Öl?`,
+   km:k=>`Die Lampe verbraucht in 1 Stunde ${F(k)} ml Öl.`},
+  {id:'kisten',xl:'Kisten (Stück)',yl:'Gewicht (kg)',xu:'Kisten',x1:'1 Kiste',yu:'kg',y1:'1 kg',ks:[8,12,15,18,25],
+   g:(a,y)=>`${a} gleich schwere Kisten wiegen zusammen ${F(y)} kg.`,
+   q:b=>`Wie viel wiegen ${b} Kisten?`,
+   qr:y=>`Wie viele Kisten wiegen zusammen ${F(y)} kg?`,
+   km:k=>`1 Kiste wiegt ${F(k)} kg.`},
+  {id:'wandern',xl:'Strecke (km)',yl:'Zeit (min)',xu:'km',x1:'1 km',yu:'Minuten',y1:'1 Minute',ks:[12,15,18,20],
+   g:(a,y)=>`Die Gruppe wandert immer gleich schnell. Für ${a} km braucht sie ${F(y)} Minuten.`,
+   q:b=>`Wie viele Minuten braucht sie für ${b} km?`,
+   qr:y=>`Wie viele km schafft sie in ${F(y)} Minuten?`,
+   km:k=>`Für 1 km braucht die Gruppe ${F(k)} Minuten.`},
+  {id:'saft',xl:'Gläser (Stück)',yl:'Saft (ml)',xu:'Gläser',x1:'1 Glas',yu:'ml',y1:'1 ml',ks:[150,200,250,300],
+   g:(a,y)=>`In ${a} gleich große Gläser passen zusammen ${F(y)} ml Saft.`,
+   q:b=>`Wie viel Saft passt in ${b} Gläser?`,
+   qr:y=>`Wie viele Gläser füllt man mit ${F(y)} ml Saft?`,
+   km:k=>`In 1 Glas passen ${F(k)} ml Saft.`}
+];
+const MONEY=CTX.filter(c=>c.money);
+const PAT5=[[1,2,3,4,5],[2,4,6,8,10],[1,2,5,10,20],[3,6,9,12,15],[2,3,5,8,10],[4,8,12,16,20],[1,3,5,7,10],[2,5,6,10,12]];
+
+/* ================= TABELLEN & SCHEMATA ================= */
+function vtable(c,xs,ys,extra=''){
+  const cell=(v,isY)=>typeof v==='number'?(isY?Ft(c,v):F(v)):v;
+  return `<table class="vt"><tr><th>${c.xl}</th>${xs.map(v=>`<td>${cell(v,false)}</td>`).join('')}</tr><tr><th>${c.yl}</th>${ys.map(v=>`<td>${cell(v,true)}</td>`).join('')}</tr>${extra}</table>`;
+}
+function ds(items){
+  return `<div class="ds">`+items.map(it=>it.op!==undefined
+    ?`<div class="dsop">↓ ${it.op}</div><div></div><div class="dsop">↓ ${it.opR!==undefined?it.opR:it.op}</div>`
+    :`<div class="dsl">${it.l}</div><div class="dsm">⟶</div><div class="dsr">${it.r}</div>`).join('')+`</div>`;
+}
+
+/* ================= GRAPHEN ================= */
+function geo(o){const W=o.w||460,H=o.h||330,L=52,B=42,T=34,Rm=22;return {W,H,L,T,pw:W-L-Rm,ph:H-T-B,nx:o.nx||10,ny:o.ny||10,xv:o.xv||1,yv:o.yv||1};}
+function gsvg(o){
+  const g=geo(o),{W,H,L,T,pw,ph,nx,ny,xv,yv}=g;
+  const X=x=>L+x/(nx*xv)*pw, Y=y=>T+ph-y/(ny*yv)*ph;
+  let s=`<svg class="graph ${o.cls||''}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+  s+=`<rect x="${L}" y="${T}" width="${pw}" height="${ph}" fill="#fff"/>`;
+  for(let i=0;i<=nx;i++)s+=`<line x1="${X(i*xv)}" y1="${T}" x2="${X(i*xv)}" y2="${T+ph}" class="gl"/>`;
+  for(let j=0;j<=ny;j++)s+=`<line x1="${L}" y1="${Y(j*yv)}" x2="${L+pw}" y2="${Y(j*yv)}" class="gl"/>`;
+  s+=`<line x1="${L}" y1="${T+ph}" x2="${L+pw+14}" y2="${T+ph}" class="ax"/><line x1="${L}" y1="${T+ph}" x2="${L}" y2="${T-14}" class="ax"/>`;
+  s+=`<polygon points="${L+pw+18},${T+ph} ${L+pw+8},${T+ph-5} ${L+pw+8},${T+ph+5}" fill="#2a3540"/><polygon points="${L},${T-18} ${L-5},${T-8} ${L+5},${T-8}" fill="#2a3540"/>`;
+  const xe=o.xe||1,ye=o.ye||2;
+  for(let i=0;i<=nx;i+=xe)s+=`<text x="${X(i*xv)}" y="${T+ph+19}" class="tl" text-anchor="middle">${F(i*xv)}</text>`;
+  for(let j=ye;j<=ny;j+=ye)s+=`<text x="${L-7}" y="${Y(j*yv)+5}" class="tl" text-anchor="end">${F(j*yv)}</text>`;
+  if(o.xl)s+=`<text x="${L+pw}" y="${H-3}" class="at" text-anchor="end">${o.xl} →</text>`;
+  if(o.yl)s+=`<text x="${L+10}" y="${T-18}" class="at">↑ ${o.yl}</text>`;
+  const xmax=nx*xv,ymax=ny*yv;
+  (o.lines||[]).forEach(l=>{
+    const pts=[];
+    for(let t=0;t<=240;t++){const x=xmax*t/240,y=l.f(x);if(y>=-1e-9&&y<=ymax+1e-9)pts.push(`${X(x).toFixed(1)},${Y(y).toFixed(1)}`);}
+    s+=`<polyline points="${pts.join(' ')}" class="ln"/>`;
+  });
+  (o.pts||[]).forEach(([x,y])=>{s+=`<circle cx="${X(x)}" cy="${Y(y)}" r="6.5" class="pt"/>`;});
+  s+=`<g class="pg"></g></svg>`;
+  return s;
+}
+// Achseneinteilung so wählen, dass k·x genau auf Kästchenlinien liegt
+function gridFor(k){
+  const cands=[k,k/2,k*2].filter(yv=>Math.abs(yv*20-Math.round(yv*20))<1e-9);
+  const opts=[];
+  for(const yv of cands){
+    const xs=[];
+    for(let x=1;x<=10;x++){const j=k*x/yv;if(Math.abs(j-Math.round(j))<1e-9&&j>=1&&j<=10)xs.push(x);}
+    if(xs.length>=4)opts.push({yv,xs});
+  }
+  return opts.length?pick(opts):{yv:k,xs:[1,2,3,4,5,6,7,8,9,10]};
+}
+
+/* ================= LEVEL 1: ZUORDNUNGEN ERKENNEN ================= */
+const SCEN=[
+ [1,'Anzahl Brötchen → Preis','Jedes Brötchen kostet 0,45 €.','Doppelt so viele Brötchen kosten doppelt so viel. Pro Brötchen zahlt man immer 0,45 €.'],
+ [1,'Getankte Liter → Preis','An der Tankstelle kostet jeder Liter gleich viel.','Doppelte Literzahl → doppelter Preis. Für 0 Liter zahlt man 0 €.'],
+ [1,'Fahrzeit → Strecke','Ein Zug fährt immer genau 80 km pro Stunde.','Bei gleicher Geschwindigkeit gilt: doppelte Zeit → doppelte Strecke.'],
+ [1,'Anzahl Kinokarten → Gesamtpreis','Jede Karte kostet 9 €.','Pro Karte immer 9 €: Preis = 9 · Anzahl.'],
+ [1,'Gewicht Äpfel (kg) → Preis','Fester Preis: 2,40 € pro kg.','Halbes Gewicht → halber Preis. Der Quotient Preis : kg ist immer 2,40.'],
+ [1,'Anzahl Pakete Papier → Anzahl Blätter','In jedem Paket sind 500 Blätter.','3 Pakete = 1500 Blätter, 6 Pakete = 3000 Blätter. Immer 500 pro Paket.'],
+ [1,'Laufzeit des Wasserhahns → Wassermenge','Es fließen gleichmäßig 8 Liter pro Minute.','Doppelte Zeit → doppelte Wassermenge. Immer 8 Liter pro Minute.'],
+ [1,'Anzahl Runden → gelaufene Meter','Eine Runde auf dem Sportplatz ist 400 m lang.','Jede Runde sind genau 400 m. 0 Runden = 0 m.'],
+ [1,'Arbeitsstunden → Lohn','Der Stundenlohn beträgt 13 €, ohne Zuschläge.','Lohn = 13 € · Stunden. Doppelt so lange arbeiten → doppelt so viel Lohn.'],
+ [1,'Anzahl Personen → Nudelmenge','Pro Person kocht man 125 g Nudeln.','Für doppelt so viele Personen braucht man doppelt so viele Nudeln.'],
+ [1,'Seitenlänge eines Quadrats → Umfang','Umfang = 4 · Seitenlänge','Der Umfang ist immer das 4-Fache der Seitenlänge. Doppelte Seite → doppelter Umfang.'],
+ [1,'Anzahl Eierkartons → Anzahl Eier','In jedem Karton sind 6 Eier.','Immer 6 Eier pro Karton – der Quotient ist immer 6.'],
+ [1,'Länge Stoff (m) → Preis','Ein Meter kostet 7,50 €.','Halbe Länge → halber Preis. Immer 7,50 € pro Meter.'],
+ [1,'Minuten → Sekunden','1 Minute hat 60 Sekunden.','Sekunden = 60 · Minuten. Doppelt so viele Minuten → doppelt so viele Sekunden.'],
+ [1,'Liter Farbe → Fläche, die man streichen kann','Mit 1 Liter streicht man 8 m².','Doppelt so viel Farbe reicht für doppelt so viel Fläche.'],
+ [1,'Anzahl Fahrradreifen → Gesamtgewicht','Jeder Reifen wiegt 700 g.','Jeder Reifen wiegt gleich viel, also: doppelte Anzahl → doppeltes Gewicht.'],
+ [0,'Alter eines Kindes → Körpergröße','Ein Kind wird älter.','Mit 10 Jahren ist man nicht doppelt so groß wie mit 5. Es gibt keinen festen Faktor.'],
+ [0,'Taxifahrt: Strecke → Preis','3,50 € Grundgebühr und 2,20 € pro km.','Wegen der Grundgebühr kostet die doppelte Strecke nicht das Doppelte. Bei 0 km zahlt man schon 3,50 €.'],
+ [0,'Handyvertrag: Minuten → Kosten','5 € Grundgebühr im Monat, dazu 0,09 € pro Minute.','Die Grundgebühr fällt immer an. Zu 0 Minuten gehören 5 €, nicht 0 €.'],
+ [0,'Anzahl Helfer → Zeit für eine Arbeit','Mehrere Helfer räumen zusammen das Deck auf.','Je mehr Helfer, desto weniger Zeit. Die Zeit wird kleiner statt größer.'],
+ [0,'Seitenlänge eines Quadrats → Flächeninhalt','A = Seite · Seite','Doppelte Seite → vierfache Fläche (2 cm: 4 cm², 4 cm: 16 cm²).'],
+ [0,'Uhrzeit → Temperatur','Temperatur an einem Sommertag.','Die Temperatur steigt und fällt im Laufe des Tages. Es gibt keinen festen Faktor.'],
+ [0,'Anzahl Hefte → Preis mit Mengenrabatt','Ab 10 Heften wird jedes Heft billiger.','Durch den Rabatt kosten 20 Hefte weniger als das Doppelte von 10 Heften.'],
+ [0,'Parkdauer → Parkgebühr','Die erste Stunde kostet 3 €, jede weitere 1 €.','1 h: 3 €, 2 h: 4 €. Doppelte Zeit, aber nicht doppelter Preis.'],
+ [0,'Geschwindigkeit → Fahrzeit für 100 km','Ein Auto fährt eine feste Strecke von 100 km.','Je schneller, desto kürzer die Fahrzeit. Doppelte Geschwindigkeit → halbe Zeit.'],
+ [0,'Brenndauer einer Kerze → Restlänge','Eine 20 cm lange Kerze brennt ab.','Die Kerze wird kürzer. Zu 0 Stunden gehören 20 cm, nicht 0 cm.'],
+ [0,'Monate → Kosten im Fitnessstudio','50 € Aufnahmegebühr, dazu 25 € pro Monat.','Wegen der Aufnahmegebühr sind die Quotienten Kosten : Monate nicht gleich.'],
+ [0,'Anzahl Pizzen → Preis beim Lieferdienst','Jede Pizza 8 €, dazu 2,50 € Liefergebühr pro Bestellung.','1 Pizza: 10,50 €, 2 Pizzen: 18,50 € – das ist nicht das Doppelte.'],
+ [0,'Gewicht eines Pakets → Porto','Bis 2 kg: 5 €, bis 5 kg: 6,50 €, bis 10 kg: 9 €.','Das Porto steigt in Stufen. Ein doppelt so schweres Paket kostet nicht das Doppelte.'],
+ [0,'Anzahl Kugeln Eis → Preis','Jede Kugel 1,50 €, die Waffel kostet 0,50 € extra.','1 Kugel: 2 €, 2 Kugeln: 3,50 €. Durch die Waffel nicht proportional.'],
+ [0,'Körpergröße → Schuhgröße','Bei verschiedenen Menschen.','Größere Menschen haben oft größere Füße, aber nicht nach einer festen Regel.'],
+ [0,'Alter eines Hundes → Gewicht','Ein Welpe wächst heran.','Ein ausgewachsener Hund nimmt nicht mehr gleichmäßig zu. Kein fester Faktor.']
+];
+const STAT=[
+ [1,'Bei einer proportionalen Zuordnung gehört zum Doppelten der Ausgangsgröße das Doppelte der zugeordneten Größe.','Genau das ist die Eigenschaft proportionaler Zuordnungen.'],
+ [1,'Bei einer proportionalen Zuordnung sind alle Quotienten y : x gleich.','Richtig – dieser gleiche Quotient heißt Proportionalitätsfaktor k.'],
+ [1,'Zur Hälfte der Ausgangsgröße gehört bei proportionalen Zuordnungen die Hälfte der zugeordneten Größe.','Richtig: Halbieren oben → halbieren unten.'],
+ [1,'Bei einer proportionalen Zuordnung gehört zu 0 immer 0.','Richtig: 0 · k = 0. Deshalb geht der Graph durch den Ursprung.'],
+ [1,'Teilt man bei einer proportionalen Zuordnung x durch 3, wird auch y durch 3 geteilt.','Richtig: Mit derselben Zahl teilen oder malnehmen.'],
+ [1,'Der Graph einer proportionalen Zuordnung ist eine Gerade durch den Ursprung.','Richtig: Alle Punkte liegen auf einer Geraden durch (0|0).'],
+ [1,'Eine Zuordnung ordnet jedem Wert der Ausgangsgröße genau einen Wert der zugeordneten Größe zu.','Richtig: x → y.'],
+ [0,'Jede Zuordnung nach dem Muster „je mehr, desto mehr“ ist proportional.','Falsch! Beim Taxi gilt auch „je mehr km, desto teurer“, aber wegen der Grundgebühr ist es nicht proportional.'],
+ [0,'Bei proportionalen Zuordnungen gehört zum Doppelten das Dreifache.','Falsch: Zum Doppelten gehört das Doppelte.'],
+ [0,'Bei proportionalen Zuordnungen sind die Differenzen y − x immer gleich.','Falsch: Nicht die Differenzen, sondern die Quotienten y : x sind gleich.'],
+ [0,'Auch mit einer Grundgebühr ist eine Zuordnung proportional.','Falsch: Mit Grundgebühr gehört zu 0 nicht 0 – also nicht proportional.'],
+ [0,'Der Graph einer proportionalen Zuordnung kann auch eine Kurve sein.','Falsch: Es ist immer eine Gerade durch den Ursprung.'],
+ [0,'Wird x um 1 größer, wird y bei proportionalen Zuordnungen auch um 1 größer.','Falsch: y wird um k größer, nicht unbedingt um 1.'],
+ [0,'Bei einer proportionalen Zuordnung darf zu x = 0 ein y-Wert größer als 0 gehören.','Falsch: Zu 0 gehört immer 0.']
+];
+function g1scen(){const s=pick(SCEN);return {kind:'Zuordnung prüfen',stages:[{mode:'choice',
+  html:`<p class="lead">Ist diese Zuordnung proportional?</p><div class="scen"><div class="scen-t">${s[1]}</div><div class="scen-d">${s[2]}</div></div><p class="mut">Tipp: Überlege, was zum Doppelten gehört – und was zu 0 gehört.</p>`,
+  choices:[{t:'proportional',ok:!!s[0]},{t:'nicht proportional',ok:!s[0]}],sol:s[3]}]};}
+function g1stat(){const s=pick(STAT);return {kind:'Stimmt das?',stages:[{mode:'choice',
+  html:`<p class="lead">Stimmt diese Aussage?</p><div class="stmt">${s[1]}</div>`,
+  choices:[{t:'stimmt ✓',ok:!!s[0]},{t:'stimmt nicht ✗',ok:!s[0]}],sol:s[2]}]};}
+function g1table(){
+  const k=pick([2,3,4,5,6,8,12,1.5,2.5,0.5]);
+  const xs=pick([[1,2,3,4],[2,4,6,8],[1,2,5,10],[2,3,5,10],[1,3,4,6],[4,5,8,10],[2,4,5,10]]);
+  const v=pick(['p','p','a','w']);
+  let ys=xs.map(x=>r2(k*x));
+  if(v==='a'){const b=pick([1,2,3,4,5]);ys=xs.map(x=>r2(k*x+b));}
+  if(v==='w'){const i=R(1,xs.length-1);let d=pick([1,2,k,-1,-k]);if(ys[i]+d<=0)d=Math.abs(d)+1;ys[i]=r2(ys[i]+d);}
+  const prop=v==='p';
+  const qs=xs.map((x,i)=>ys[i]/x);
+  const c0={xl:'x',yl:'y',money:false};
+  const qt=q=>(isNice(q)?'':'≈ ')+F(q);
+  const qRow=`<tr class="qrow"><th>y : x</th>${qs.map(q=>`<td>${qt(q)}</td>`).join('')}</tr>`;
+  const ex=(prop?`Alle Quotienten y : x sind gleich (${F(k)}). Die Zuordnung ist <b>proportional</b>.`:`Die Quotienten y : x sind <b>nicht alle gleich</b>. Die Zuordnung ist nicht proportional.`)+(v==='a'?' Hier steckt ein fester Zuschlag drin – wie eine Grundgebühr.':'');
+  const choices=[{t:'proportional',ok:prop},{t:'nicht proportional',ok:!prop}];
+  if(qs.every(isNice)&&Math.random()<0.6){
+    return {kind:'Tabelle prüfen',stages:[
+      {mode:'input',html:`<p class="lead">Berechne für jedes Wertepaar den Quotienten y : x.</p>`+vtable(c0,xs,ys,`<tr class="qrow"><th>y : x</th>${xs.map((x,i)=>`<td>${SL(i)}</td>`).join('')}</tr>`),
+       answers:qs,hint:'Teile jeweils den unteren Wert durch den oberen Wert: y : x.',sol:vtable(c0,xs,ys,qRow)},
+      {mode:'choice',html:`<p class="lead">Ist die Zuordnung proportional?</p>`+vtable(c0,xs,ys,qRow),choices,sol:ex}]};
+  }
+  return {kind:'Tabelle prüfen',stages:[{mode:'choice',html:`<p class="lead">Ist die Zuordnung in der Tabelle proportional?</p>`+vtable(c0,xs,ys)+`<p class="mut">Tipp: Prüfe die Quotienten y : x oder schau, ob zum Doppelten das Doppelte gehört.</p>`,
+    choices,sol:vtable(c0,xs,ys,qRow)+ex}]};
+}
+
+/* ================= LEVEL 2: WERTETABELLEN ================= */
+function g2table(){
+  const c=pick(CTX),k=pick(c.ks),xs=pick(PAT5),ys=xs.map(x=>r2(k*x));
+  const idx=shuffle([0,1,2,3,4]);const gaps=idx.slice(2,2+pick([2,3,3]));
+  const X=[],Y=[],ans=[];let si=0,xg=0;
+  xs.forEach((x,i)=>{
+    if(gaps.includes(i)){
+      const gx=xg===0&&Math.random()<0.35;
+      if(gx){xg++;X.push(SL(si));Y.push(ys[i]);ans.push(x);}else{X.push(x);Y.push(SL(si));ans.push(ys[i]);}
+      si++;
+    }else{X.push(x);Y.push(ys[i]);}
+  });
+  return {kind:'Wertetabelle ergänzen',stages:[{mode:'input',
+    html:`<p class="lead">Die Zuordnung ist proportional. Ergänze die Wertetabelle.</p><div class="ctxline">${c.xl} → ${c.yl}</div>`+vtable(c,X,Y),
+    answers:ans,hint:'Nutze ein vollständiges Paar: Was du oben mit einer Zahl malnimmst oder teilst, machst du unten genauso. Oder rechne erst aus, was zu 1 gehört.',
+    sol:`Zu ${c.x1} gehört ${V(c,k)}.<br>Also: y = x · ${F(k)} und x = y : ${F(k)}.`+vtable(c,xs,ys)}]};
+}
+function g2op(){
+  const c=pick(CTX),k=pick(c.ks),m=pick([2,3,4,5,6]),x1=pick([2,3,4,5,6,8]),mul=Math.random()<0.6;
+  const xa=mul?x1:x1*m,xb=mul?x1*m:x1,ya=r2(k*xa),yb=r2(k*xb),sym=mul?'·':':';
+  return {kind:'Mit Rechenpfeilen',stages:[{mode:'input',
+    html:`<p class="lead">Die Zuordnung ist proportional. Fülle beide Kästchen aus.</p>
+    <div class="opgrid">
+      <div class="lab">${c.xl}</div><div class="opc">${F(xa)}</div><div class="oparr">${sym} ${SL(0)} ⟶</div><div class="opc">${F(xb)}</div>
+      <div class="lab">${c.yl}</div><div class="opc">${Ft(c,ya)}</div><div class="oparr">${sym} <span class="same">(dieselbe Zahl)</span> ⟶</div><div class="opc">${SL(1)}</div>
+    </div>`,
+    answers:[m,yb],hint:`Womit musst du ${F(xa)} ${mul?'malnehmen':'teilen'}, um ${F(xb)} zu erhalten? Mit derselben Zahl rechnest du unten.`,
+    sol:`${F(xa)} ${sym} ${m} = ${F(xb)}<br>also auch: ${Ft(c,ya)} ${sym} ${m} = ${Ft(c,yb)}`}]};
+}
+function g2sum(){
+  const c=pick(CTX),k=pick(c.ks);let a=R(2,9),b;do{b=R(2,9);}while(b===a);
+  const add=Math.random()<0.65,big=Math.max(a,b),small=Math.min(a,b);
+  const xs=add?[a,b,a+b]:[big,small,big-small];
+  const ys=xs.map(x=>r2(k*x));
+  return {kind:'Paare kombinieren',stages:[{mode:'input',
+    html:`<p class="lead">Die Zuordnung ist proportional. Nutze die beiden bekannten Paare.</p><div class="ctxline">${c.xl} → ${c.yl}</div>`+vtable(c,xs,[ys[0],ys[1],SL(0)])+`<p class="mut">Schaffst du es, ohne zuerst auf 1 zu rechnen?</p>`,
+    answers:[ys[2]],
+    hint:add?`${a} + ${b} = ${a+b}. Bei proportionalen Zuordnungen darfst du die zugehörigen Werte auch addieren.`:`${big} − ${small} = ${big-small}. Bei proportionalen Zuordnungen darfst du die zugehörigen Werte auch subtrahieren.`,
+    sol:add?`${a} + ${b} = ${a+b}, also ${Ft(c,ys[0])} + ${Ft(c,ys[1])} = ${Ft(c,ys[2])}`:`${big} − ${small} = ${big-small}, also ${Ft(c,ys[0])} − ${Ft(c,ys[1])} = ${Ft(c,ys[2])}`}]};
+}
+function g2recipe(){
+  const n=pick([2,4,5]);let t;do{t=pick([3,6,8,10,12,15]);}while(t===n);
+  const ING=[['Reis','g',[50,60,75,80]],['Bohnen','g',[40,50,60]],['Gemüsebrühe','ml',[100,125,150,200]],['Kokosmilch','ml',[50,80,100]],['Trockenfleisch','g',[30,40,60]],['Kartoffeln','g',[150,200,250]],['Haferflocken','g',[40,50,70]]];
+  const rows=shuffle(ING).slice(0,3).map(([nm,u,pp])=>{const p=pick(pp);return {nm,u,p,base:n*p,ans:t*p};});
+  return {kind:'Proviant hochrechnen',stages:[{mode:'input',
+    html:`<p class="story">Der Schiffskoch hat ein Rezept für <b>${n} Personen</b>. Heute essen <b>${t} Personen</b> mit. Rechne alle Zutaten um.</p>
+    <table class="vt"><tr><th>Zutat</th><th>${n} Personen</th><th>${t} Personen</th></tr>${rows.map((r,i)=>`<tr><td class="l">${r.nm}</td><td>${r.base} ${r.u}</td><td>${SL(i)} ${r.u}</td></tr>`).join('')}</table>`,
+    answers:rows.map(r=>r.ans),hint:`Rechne zuerst für 1 Person (: ${n}), dann für ${t} Personen (· ${t}).`,
+    sol:rows.map(r=>`${r.nm}: ${r.base} ${r.u} : ${n} = ${r.p} ${r.u} pro Person; · ${t} = <b>${r.ans} ${r.u}</b>`).join('<br>')}]};
+}
+
+/* ================= LEVEL 3: DREISATZ ================= */
+function abk(){const c=pick(CTX),k=pick(c.ks),a=R(2,9);let b;do{b=R(2,15);}while(b===a);return {c,k,a,b,Y:r2(a*k),T:r2(b*k)};}
+function dsSol(c,k,a,b,Y,T){return ds([{l:`${a} ${c.xu}`,r:V(c,Y)},{op:`: ${a}`},{l:c.x1,r:V(c,k)},{op:`· ${b}`},{l:`${b} ${c.xu}`,r:V(c,T)}]);}
+function g3guided(){
+  const {c,k,a,b,Y,T}=abk();const show=S.lv[3].s<3||Math.random()<0.5;
+  return {kind:'Dreisatz mit Schema',stages:[{mode:'input',
+    html:`<p class="story">${c.g(a,Y)} ${c.q(b)}</p>`+ds([{l:`${a} ${c.xu}`,r:V(c,Y)},{op:show?`: ${a}`:': ?'},{l:c.x1,r:SL(0)+U(c)},{op:show?`· ${b}`:'· ?'},{l:`${b} ${c.xu}`,r:SL(1)+U(c)}]),
+    answers:[k,T],hint:`1. Schritt: Teile durch ${a} – dann kennst du den Wert für ${c.x1}.<br>2. Schritt: Nimm diesen Wert mal ${b}.`,
+    sol:`${V(c,Y)} : ${a} = ${V(c,k)}<br>${V(c,k)} · ${b} = <b>${V(c,T)}</b>`+dsSol(c,k,a,b,Y,T)}]};
+}
+function g3guidedRev(){
+  const {c,k,a,b,Y,T}=abk();
+  return {kind:'Dreisatz rückwärts',stages:[{mode:'input',
+    html:`<p class="story">${c.g(a,Y)} ${c.qr(T)}</p>`+ds([{l:`${a} ${c.xu}`,r:V(c,Y)},{op:`: ${a}`},{l:c.x1,r:SL(0)+U(c)},{op:'· ?'},{l:SL(1)+UX(c),r:V(c,T)}]),
+    answers:[k,b],hint:`Rechne erst aus, was zu ${c.x1} gehört (: ${a}). Dann: Wie oft passt dieser Wert in ${V(c,T)}?`,
+    sol:`${V(c,Y)} : ${a} = ${V(c,k)} (für ${c.x1})<br>${V(c,T)} : ${V(c,k)} = <b>${b}</b><br>Also: ${b} ${c.xu}.`}]};
+}
+function g3free(){
+  const {c,k,a,b,Y,T}=abk();
+  return {kind:'Dreisatz ohne Hilfe',stages:[{mode:'input',
+    html:`<p class="story">${c.g(a,Y)} ${c.q(b)}</p><p class="mut">Rechne mit dem Dreisatz – im Heft oder im Kopf.</p><div class="ansline">Antwort: ${SL(0)}${U(c)}</div>`,
+    answers:[T],hint:`Schließe zuerst auf ${c.x1}: ${V(c,Y)} : ${a}. Dann rechne mal ${b}.`,
+    sol:dsSol(c,k,a,b,Y,T)}]};
+}
+function g3freeRev(){
+  const {c,k,a,b,Y,T}=abk();
+  return {kind:'Dreisatz ohne Hilfe',stages:[{mode:'input',
+    html:`<p class="story">${c.g(a,Y)} ${c.qr(T)}</p><p class="mut">Rechne mit dem Dreisatz – im Heft oder im Kopf.</p><div class="ansline">Antwort: ${SL(0)}${UX(c)}</div>`,
+    answers:[b],hint:`Rechne erst aus, was zu ${c.x1} gehört (${V(c,Y)} : ${a}). Dann: Wie oft passt das in ${V(c,T)}?`,
+    sol:`${V(c,Y)} : ${a} = ${V(c,k)} (für ${c.x1})<br>${V(c,T)} : ${V(c,k)} = <b>${b}</b>`}]};
+}
+function g3pro(){
+  const c=pick(CTX),k=pick(c.ks),g=pick([2,3,4,5]);const m1=R(2,5);let m2;do{m2=R(2,5);}while(m2===m1);
+  const a=g*m1,b=g*m2,Y=r2(a*k),G=r2(g*k),T=r2(b*k);
+  return {kind:'Profi-Dreisatz',stages:[{mode:'input',
+    html:`<p class="story">${c.g(a,Y)} ${c.q(b)}</p><p class="mut">Profi-Weg: Du musst nicht auf 1 schließen. Schließe auf ${g} ${c.xu}!</p>`+ds([{l:`${a} ${c.xu}`,r:V(c,Y)},{op:`: ${m1}`},{l:`${g} ${c.xu}`,r:SL(0)+U(c)},{op:`· ${m2}`},{l:`${b} ${c.xu}`,r:SL(1)+U(c)}]),
+    answers:[G,T],hint:`${a} : ${m1} = ${g}. Teile also auch ${V(c,Y)} durch ${m1}. Danach mal ${m2}.`,
+    sol:`${V(c,Y)} : ${m1} = ${V(c,G)}<br>${V(c,G)} · ${m2} = <b>${V(c,T)}</b>`}]};
+}
+function gens3(){return S.lv[3].s<4?[[g3guided,3],[g3guidedRev,1]]:[[g3guided,2],[g3guidedRev,2],[g3free,3],[g3freeRev,2],[g3pro,2]];}
+
+/* ================= LEVEL 4: GRAPHEN ================= */
+function g4decide(){
+  const yv=pick([1,2,5,10]),ymax=10*yv,t=pick(['origin','origin','affine','curve','falling','pon','pon','poff','zig']);
+  let lines=[],pts=[],prop=false,ex='';
+  const xs5=shuffle([1,2,3,4,5,6,7,8,9,10]).slice(0,5).sort((a,b)=>a-b);
+  if(t==='origin'){const s=yv*pick([0.5,0.6,0.8,1]);lines=[{f:x=>s*x}];prop=true;ex='Der Graph ist eine Gerade durch den Ursprung (0|0). Die Zuordnung ist <b>proportional</b>.';}
+  if(t==='affine'){const b=yv*R(1,3),s=(ymax*0.85-b)/10;lines=[{f:x=>b+s*x}];ex=`Die Gerade beginnt bei y = ${F(b)}, nicht im Ursprung. Zu 0 gehört nicht 0 – also <b>nicht proportional</b>.`;}
+  if(t==='curve'){const cc=ymax/100*pick([0.8,0.9,1]);lines=[{f:x=>cc*x*x}];ex='Der Graph geht zwar durch (0|0), ist aber keine Gerade, sondern eine Kurve. <b>Nicht proportional</b>.';}
+  if(t==='falling'){const b=ymax*0.9,s=b/R(9,10);lines=[{f:x=>b-s*x}];ex='Der Graph fällt und beginnt nicht im Ursprung. <b>Nicht proportional</b>.';}
+  if(t==='pon'){const s=yv*pick([0.5,1]);pts=xs5.map(x=>[x,s*x]);prop=true;ex='Alle Punkte liegen auf einer Geraden durch den Ursprung (0|0). <b>Proportional</b>.';}
+  if(t==='poff'){const b=yv*R(1,3),s=yv*0.5;pts=xs5.map(x=>[x,b+s*x]);ex='Die Punkte liegen auf einer Geraden – aber die geht nicht durch den Ursprung. <b>Nicht proportional</b>.';}
+  if(t==='zig'){const s1=yv*0.4,s2=yv*1.2;lines=[{f:x=>x<=4?s1*x:s1*4+s2*(x-4)}];ex='Der Graph geht durch (0|0), knickt aber ab. Er ist keine durchgehende Gerade → <b>nicht proportional</b>.';}
+  return {kind:'Graph prüfen',stages:[{mode:'choice',html:`<p class="lead">Gehört der Graph zu einer proportionalen Zuordnung?</p>`+gsvg({yv,lines,pts,xl:'x',yl:'y'}),
+    choices:[{t:'proportional',ok:prop},{t:'nicht proportional',ok:!prop}],sol:ex}]};
+}
+function g4read(){
+  const c=pick(CTX),k=pick(c.ks),G=gridFor(k);const a=pick(G.xs);const c2=pick(G.xs.filter(x=>x!==a));
+  return {kind:'Werte ablesen',stages:[{mode:'input',
+    html:`<p class="lead">Lies am Graphen ab. (${c.xl} → ${c.yl})</p><div class="flex2"><div style="flex:1;min-width:280px">`+gsvg({yv:G.yv,lines:[{f:x=>k*x}],xl:c.xl,yl:c.yl})+`</div><div>
+    <div class="qline">x = ${a} → y = ${SL(0)}</div><div class="qline">x = ${SL(1)} → y = ${Ft(c,c2*k)}</div></div></div>`,
+    answers:[r2(a*k),c2],hint:`Achte auf die Einteilung: 1 Kästchen nach oben sind ${F(G.yv)}. Gehe von der x-Achse senkrecht hoch bis zur Geraden und dann waagerecht zur y-Achse – oder umgekehrt.`,
+    sol:`Zu x = ${a} gehört y = ${Ft(c,a*k)}.<br>Zu y = ${Ft(c,c2*k)} gehört x = ${c2}.<br>(1 Kästchen nach oben = ${F(G.yv)})`}]};
+}
+function g4plot(){
+  const c=pick(CTX),k=pick(c.ks),G=gridFor(k);const xs=shuffle(G.xs).slice(0,3).sort((a,b)=>a-b);
+  const target=new Set(xs.map(x=>x+','+Math.round(k*x/G.yv)));
+  const o={yv:G.yv,xl:c.xl,yl:c.yl,cls:'plot'};
+  return {kind:'Punkte eintragen',stages:[{mode:'plot',o,k,target,
+    html:`<p class="lead">Trage die Wertepaare als Punkte ein. Tippe auf die richtigen Kreuzungspunkte.</p>`+vtable(c,xs,xs.map(x=>r2(k*x)))+gsvg(o),
+    hint:`Achte auf die Einteilung der y-Achse: 1 Kästchen = ${F(G.yv)}. Gehe erst nach rechts (x), dann nach oben (y).`,
+    sol:'Die blau umrandeten Punkte sind richtig. Sie liegen alle auf einer Geraden durch den Ursprung.',
+    after:'Alle Punkte liegen auf einer Geraden durch den Ursprung – typisch proportional!'}]};
+}
+function g4match(){
+  const c=pick(CTX),k=pick(c.ks),G=gridFor(k);const xs=shuffle(G.xs).slice(0,3).sort((a,b)=>a-b);
+  const k2=k*pick([0.5,2,1.5]);const b=G.yv*2;
+  const gs=shuffle([{f:x=>k*x,ok:true},{f:x=>k2*x,ok:false},{f:x=>b+k*x*0.8,ok:false}]);
+  const L=['A','B','C'];const cor=L[gs.findIndex(g=>g.ok)];
+  return {kind:'Passenden Graphen finden',stages:[{mode:'choice',
+    html:`<p class="lead">Welcher Graph passt zur Tabelle?</p>`+vtable(c,xs,xs.map(x=>r2(k*x)))+`<div class="minis">${gs.map((g,i)=>`<div class="mini">Graph ${L[i]}`+gsvg({yv:G.yv,lines:[{f:g.f}],xe:2,w:330,h:280})+`</div>`).join('')}</div>`,
+    choices:L.map((l,i)=>({t:'Graph '+l,ok:gs[i].ok})),
+    hint:`Prüfe einen Punkt aus der Tabelle: Zu x = ${xs[0]} gehört y = ${Ft(c,k*xs[0])}. Und: Geht der Graph durch (0|0)?`,
+    sol:`Graph ${cor} geht durch den Ursprung und durch alle Punkte der Tabelle, z. B. (${xs[0]} | ${F(k*xs[0])}).`}]};
+}
+
+/* ================= LEVEL 5: PROPORTIONALITÄTSFAKTOR ================= */
+function g5pair(){
+  const c=pick(CTX),k=pick(c.ks),a=R(2,12),Y=r2(a*k);
+  return {kind:'Faktor k berechnen',stages:[{mode:'input',
+    html:`<p class="story">${c.g(a,Y)}</p><p class="lead">Berechne den Proportionalitätsfaktor k = y : x.</p><div class="ansline">k = ${SL(0)} <span class="u">${c.yu} pro ${perUnit(c)}</span></div>`,
+    answers:[k],hint:`Teile den y-Wert durch den x-Wert: ${Ft(c,Y)} : ${a}.`,
+    sol:`k = ${Ft(c,Y)} : ${a} = <b>${F(k)}</b><br>Das heißt: ${c.km(k)}`}]};
+}
+function g5table(){
+  const c=pick(CTX),k=pick(c.ks),xs=pick(PAT5),ys=xs.map(x=>r2(k*x));
+  const fullI=R(0,4);const gaps=shuffle([0,1,2,3,4].filter(i=>i!==fullI)).slice(0,3);
+  const xgap=Math.random()<0.4?pick(gaps):-1;
+  const X1=[],Y1=[],X2=[],Y2=[],ans=[];let si=0;
+  xs.forEach((x,i)=>{
+    if(!gaps.includes(i)){X1.push(x);Y1.push(ys[i]);X2.push(x);Y2.push(ys[i]);return;}
+    if(i===xgap){X1.push('<span class="qm">?</span>');Y1.push(ys[i]);X2.push(SL(si));Y2.push(ys[i]);ans.push(x);}
+    else{X1.push(x);Y1.push('<span class="qm">?</span>');X2.push(x);Y2.push(SL(si));ans.push(ys[i]);}
+    si++;
+  });
+  return {kind:'Mit k ergänzen',stages:[
+    {mode:'input',html:`<p class="lead">Die Zuordnung ist proportional. Berechne zuerst den Faktor k = y : x.</p><div class="ctxline">${c.xl} → ${c.yl}</div>`+vtable(c,X1,Y1)+`<div class="ansline">k = ${SL(0)}</div>`,
+     answers:[k],hint:'Nimm ein vollständiges Paar und rechne y : x.',sol:`k = ${Ft(c,ys[fullI])} : ${xs[fullI]} = <b>${F(k)}</b>`},
+    {mode:'input',html:`<p class="lead">Jetzt ergänze mit k = ${F(k)}.</p><div class="formula" style="font-size:22px">y = ${F(k)} · x &nbsp;&nbsp;|&nbsp;&nbsp; x = y : ${F(k)}</div><div class="ctxline">${c.xl} → ${c.yl}</div>`+vtable(c,X2,Y2),
+     answers:ans,hint:`Für y: x · ${F(k)}. Für x: y : ${F(k)}.`,sol:vtable(c,xs,ys)}]};
+}
+function g5formula(){
+  const k=pick([0.5,0.8,1.2,1.5,2,2.5,3,4,6,7.5]),a=R(2,12);let x2;do{x2=R(2,12);}while(x2===a);
+  return {kind:'Mit y = k · x rechnen',stages:[{mode:'input',
+    html:`<p class="lead">Für eine proportionale Zuordnung gilt:</p><div class="formula">y = ${F(k)} · x</div><div class="qline">x = ${a} → y = ${SL(0)}</div><div class="qline">x = ${SL(1)} → y = ${F(k*x2)}</div>`,
+    answers:[r2(k*a),x2],hint:`y berechnest du mit x · ${F(k)}. x berechnest du mit y : ${F(k)}.`,
+    sol:`y = ${F(k)} · ${a} = <b>${F(k*a)}</b><br>x = ${F(k*x2)} : ${F(k)} = <b>${x2}</b>`}]};
+}
+function g5mean(){
+  const c=pick(CTX),k=pick(c.ks);
+  const ch=shuffle([{t:c.km(k),ok:true},{t:`${F(k)} ${c.xu} ergeben zusammen ${c.y1}.`,ok:false},{t:`Man hat immer ${V(c,k)}, egal wie viele ${c.xu}.`,ok:false},{t:`Alle ${c.xu} zusammen ergeben ${V(c,k)}.`,ok:false}]);
+  return {kind:'Was bedeutet k?',stages:[{mode:'choice',long:true,
+    html:`<p class="lead">Bei der proportionalen Zuordnung</p><div class="stmt">${c.xl} → ${c.yl}</div><p class="lead">ist der Proportionalitätsfaktor <span style="color:var(--sea)">k = ${F(k)}</span>. Was bedeutet das?</p>`,
+    choices:ch,hint:'k ist der Wert, der zu genau 1 Einheit der Ausgangsgröße gehört.',sol:`k = ${F(k)} heißt: ${c.km(k)}`}]};
+}
+function g5compare(){
+  const c=pick(MONEY);const ks=shuffle(c.ks);const kA=ks[0],kB=ks[1];const a=R(2,8);let b;do{b=R(2,8);}while(b===a);
+  const A='Händler Anton',B='Händlerin Bella';const cheap=kA<kB?A:B;
+  const off=`<div class="offers"><div class="offer"><b>🧔 ${A}</b>${a} ${c.xu} für ${E(a*kA)}</div><div class="offer"><b>👩 ${B}</b>${b} ${c.xu} für ${E(b*kB)}</div></div>`;
+  return {kind:'Preisvergleich',stages:[
+    {mode:'input',html:`<p class="lead">Wer verkauft günstiger? Berechne zuerst k (Preis für ${c.x1}).</p>`+off+`<div class="qline">${A}: k = ${SL(0)} <span class="u">€</span></div><div class="qline">${B}: k = ${SL(1)} <span class="u">€</span></div>`,
+     answers:[kA,kB],hint:'Teile jeweils den Preis durch die Menge.',sol:`${A}: ${E(a*kA)} : ${a} = ${E(kA)}<br>${B}: ${E(b*kB)} : ${b} = ${E(kB)}`},
+    {mode:'choice',html:`<p class="lead">Wer ist günstiger?</p>`+off+`<div class="qline">${A}: ${E(kA)} pro ${perUnit(c)}</div><div class="qline">${B}: ${E(kB)} pro ${perUnit(c)}</div>`,
+     choices:[{t:A,ok:cheap===A},{t:B,ok:cheap===B}],sol:`${cheap} ist günstiger: Dort kostet ${c.x1} weniger. Der kleinere Faktor k ist der bessere Preis.`}]};
+}
+function g5error(){
+  const c=pick(CTX),k=pick(c.ks),xs=pick(PAT5),ys=xs.map(x=>r2(k*x));const i=R(0,4);
+  let d=pick([k,-k,2*k]);if(ys[i]+d<=0)d=k;if(!c.money&&k>=8)d=pick([d,k/2>=1?Math.round(k/2):1]);ys[i]=r2(ys[i]+d);
+  const qs=xs.map((x,j)=>ys[j]/x);const qt=q=>(isNice(q)?'':'≈ ')+F(q);
+  return {kind:'Fehler finden',stages:[{mode:'choice',
+    html:`<p class="lead">Ein y-Wert passt nicht zur proportionalen Zuordnung. Welcher?</p><div class="ctxline">${c.xl} → ${c.yl}</div>`+vtable(c,xs,ys)+`<p class="mut">Tipp: Berechne y : x für jede Spalte.</p>`,
+    choices:xs.map((x,j)=>({t:`Spalte x = ${F(x)}`,ok:j===i})),hint:'Bei vier Spalten ist y : x gleich – nur bei einer nicht.',
+    sol:vtable(c,xs,ys,`<tr class="qrow"><th>y : x</th>${qs.map(q=>`<td>${qt(q)}</td>`).join('')}</tr>`)+`Richtig wäre bei x = ${F(xs[i])}: y = ${Ft(c,xs[i]*k)}.`}]};
+}
+
+/* ================= LEVEL-KONFIGURATION ================= */
+const LV=[null,
+ {name:'Hafen der Händler',topic:'Zuordnungen erkennen',ico:'⚓',code:null,gens:[[g1scen,4],[g1table,4],[g1stat,2]]},
+ {name:'Tabellen-Basar',topic:'Wertetabellen',ico:'🏺',code:'ANKER',gens:[[g2table,5],[g2op,3],[g2sum,2],[g2recipe,2]]},
+ {name:'Dreisatz-Dschungel',topic:'Dreisatz',ico:'🌴',code:'KOMPASS',gens:null},
+ {name:'Graphen-Gebirge',topic:'Graphen',ico:'⛰️',code:'FERNROHR',gens:[[g4decide,3],[g4read,3],[g4plot,3],[g4match,2]]},
+ {name:'Faktor-Vulkan',topic:'Proportionalitätsfaktor k',ico:'🌋',code:'VULKAN',gens:[[g5pair,2],[g5table,3],[g5formula,3],[g5mean,2],[g5compare,2],[g5error,2]]}
+];
+const TEACHER_PW='LEUCHTTURM';
+
+const LOG=[null,
+`<h3>Zuordnung</h3><p>Eine Zuordnung ordnet jedem Wert der <b>Ausgangsgröße x</b> genau einen Wert der <b>zugeordneten Größe y</b> zu: x → y.</p>
+<div class="merk"><b>Proportional</b> heißt:<ul><li>zum Doppelten (Dreifachen …) von x gehört das Doppelte (Dreifache …) von y</li><li>zur Hälfte von x gehört die Hälfte von y</li><li>alle Quotienten <b>y : x</b> sind gleich</li><li>zu 0 gehört 0</li></ul></div>
+<p class="warn">Achtung: „Je mehr, desto mehr“ reicht nicht! Mit Grundgebühr ist eine Zuordnung nicht proportional.</p>`,
+`<h3>Wertetabellen ergänzen</h3><div class="merk">Was du bei x mit einer Zahl <b>malnimmst</b> oder <b>teilst</b>, machst du bei y mit <b>derselben Zahl</b>.<br><br>2 kg → 3 € &nbsp;&nbsp;⟹ (· 3) &nbsp;&nbsp; 6 kg → 9 €</div>
+<div class="merk">Du darfst auch Paare <b>addieren</b>:<br>2 kg → 3 € und 3 kg → 4,50 € &nbsp;⟹&nbsp; 5 kg → 7,50 €</div><p>Tipp: Rechne über 1 – was gehört zu 1?</p>`,
+`<h3>Dreisatz</h3><div class="merk"><b>1. Gegeben:</b> 4 Brote → 6,00 €<br><b>2. Auf 1 schließen (: 4):</b> 1 Brot → 1,50 €<br><b>3. Auf das Gesuchte (· 7):</b> 7 Brote → 10,50 €</div>
+<p>Was du links rechnest, rechnest du auch rechts!</p><div class="merk"><b>Profi-Weg:</b> 12 Brote → 18 € &nbsp;(: 3)&nbsp; 4 Brote → 6 € &nbsp;(· 2)&nbsp; 8 Brote → 12 €</div>`,
+`<h3>Graphen</h3><div class="merk">Der Graph einer proportionalen Zuordnung ist eine <b>Gerade durch den Ursprung (0|0)</b>.</div>
+<p><b>Nicht proportional:</b> Gerade beginnt nicht bei 0 · Kurve · fallender Graph · Knick</p><div class="merk"><b>Ablesen:</b> Von der x-Achse senkrecht hoch bis zum Graphen, dann waagerecht zur y-Achse.<br><b>Achtung:</b> Schau genau, wie viel 1 Kästchen bedeutet!</div>`,
+`<h3>Proportionalitätsfaktor k</h3><div class="merk"><b>k = y : x</b> &nbsp; (immer gleich)<br><b>y = k · x</b> &nbsp;&nbsp; und &nbsp;&nbsp; <b>x = y : k</b></div>
+<p>k ist der Wert, der zu <b>1 Einheit</b> gehört.<br>Beispiel: 3 kg kosten 4,50 € → k = 4,50 : 3 = 1,50 → 1 kg kostet 1,50 €.</p><div class="merk"><b>Preisvergleich:</b> Das Angebot mit dem kleineren k ist günstiger.</div>`
+];
+</script>
+<script>
+'use strict';
+/* ================= APP ================= */
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const KEY='proportia_v1';
+function defState(){const lv={};for(let n=1;n<=5;n++)lv[n]={s:0,f:0,d:false};return {v:1,name:'',coins:0,goal:12,auto:true,unl:{1:true,2:false,3:false,4:false,5:false},lv,intro:false};}
+function load(){try{const t=JSON.parse(localStorage.getItem(KEY));if(t&&t.v===1&&t.lv)return t;}catch(e){}return defState();}
+let S=load();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+let cur=null;
+
+const PRAISE=['Super!','Stark gerechnet!','Richtig! ⚓','Volltreffer!','Genau so!','Ahoi – richtig!','Klasse!','Perfekt!'];
+function stars(n){const L=S.lv[n];if(!L.d)return 0;const r=L.f/Math.max(1,L.s);return r>=0.8?3:r>=0.55?2:1;}
+const starTxt=n=>'★'.repeat(n)+'☆'.repeat(3-n);
+const allDone=()=>[1,2,3,4,5].every(n=>S.lv[n].d);
+
+function hdr(){
+  $('#coins').textContent='🪙 '+S.coins;
+  $('#hName').textContent=S.name?'⛵ '+S.name:'';
+}
+
+/* ---------- MAP ---------- */
+const POS=[null,[150,420],[345,235],[540,405],[725,200],[860,420]];
+function renderMap(){
+  const cur5=[1,2,3,4,5].find(n=>S.unl[n]&&!S.lv[n].d);
+  let s=`<svg viewBox="0 0 1000 560" preserveAspectRatio="xMidYMid meet">
+  <defs><radialGradient id="sea" cx="50%" cy="45%" r="75%"><stop offset="0" stop-color="#2b9cc7"/><stop offset="1" stop-color="#0b4f73"/></radialGradient>
+  <radialGradient id="sand" cx="45%" cy="40%" r="60%"><stop offset="0" stop-color="#fbe9b7"/><stop offset="1" stop-color="#d9b56a"/></radialGradient></defs>
+  <rect width="1000" height="560" fill="url(#sea)"/>`;
+  for(let i=0;i<14;i++){const x=(i*137)%960+20,y=(i*89)%520+20;s+=`<path d="M${x} ${y} q10 -8 20 0 t20 0" stroke="#bfe8fb" stroke-opacity=".35" stroke-width="3" fill="none"/>`;}
+  s+=`<path d="M150 420 C 220 330, 270 250, 345 235 S 470 410, 540 405 S 650 210, 725 200 S 830 420, 860 420 S 960 250, 925 120" stroke="#fff6d8" stroke-width="5" stroke-dasharray="4 14" stroke-linecap="round" fill="none" opacity=".9"/>`;
+  for(let n=1;n<=5;n++){
+    const [x,y]=POS[n],L=S.lv[n],un=!!S.unl[n];
+    const st=!un?'🔒 gesperrt':L.d?starTxt(stars(n)):`${Math.min(L.s,S.goal)} / ${S.goal} Aufgaben`;
+    s+=`<g class="isl ${un?'':'locked'}" data-n="${n}" transform="translate(${x},${y})">
+      <ellipse cx="0" cy="18" rx="92" ry="44" fill="#0a3f5c" opacity=".35"/>
+      <ellipse cx="0" cy="8" rx="88" ry="46" fill="url(#sand)" stroke="#b48a3c" stroke-width="3"/>
+      <ellipse cx="-8" cy="-2" rx="52" ry="26" fill="#5fae5a" opacity=".85"/>
+      <text x="0" y="12" text-anchor="middle" font-size="44">${LV[n].ico}</text>
+      ${L.d?`<text x="58" y="-24" font-size="30">✅</text>`:''}
+      <text x="0" y="78" text-anchor="middle" class="mlabel">${n}. ${LV[n].name}</text>
+      <text x="0" y="99" text-anchor="middle" class="mtopic">${LV[n].topic}</text>
+      <text x="0" y="-48" text-anchor="middle" class="mstat">${st}</text>
+    </g>`;
+  }
+  const ad=allDone();
+  s+=`<g class="isl ${ad?'':'locked'}" data-n="6" transform="translate(925,110)"><ellipse cx="0" cy="12" rx="56" ry="30" fill="url(#sand)" stroke="#b48a3c" stroke-width="3"/>
+    <text x="0" y="20" text-anchor="middle" font-size="44">${ad?'💰':'❓'}</text><text x="0" y="66" text-anchor="middle" class="mlabel">Schatzinsel</text></g>`;
+  if(cur5){const [x,y]=POS[cur5];s+=`<text x="${x-118}" y="${y-6}" font-size="46">⛵</text>`;}
+  else if(ad){s+=`<text x="830" y="120" font-size="46">⛵</text>`;}
+  s+=`<text x="30" y="545" font-size="40" opacity=".8">🧭</text></svg>`;
+  const pieces=[1,2,3,4,5].map(n=>`<div class="piece ${S.lv[n].d?'got':''}">${S.lv[n].d?'🗺️':n}</div>`).join('');
+  s+=`<div class="mapinfo"><h2>Kapitän/in ${esc(S.name||'')}</h2><div class="pieces">${pieces}</div><p>Sammle alle 5 Kartenstücke, um den Schatz zu finden! Tippe auf eine Insel.</p></div>`;
+  $('#scrMap').innerHTML=s;
+  $$('#scrMap .isl').forEach(g=>g.addEventListener('click',()=>{const n=+g.dataset.n;if(n===6){if(allDone())showFinale();else msgModal('Noch nicht!','Die Schatzinsel erscheint erst, wenn du alle 5 Kartenstücke gesammelt hast.');return;}
+    if(S.unl[n])openLevel(n);else codeModal(n);}));
+}
+function showMap(){cur=null;$('#scrLevel').classList.add('hidden');$('#scrMap').classList.remove('hidden');$('#bMap').classList.add('hidden');renderMap();hdr();}
+
+/* ---------- LEVEL ---------- */
+function openLevel(n){
+  cur={n,hist:[],task:null,si:0,tries:0,vals:[],active:0,failed:false,allFirst:true,done:false};
+  $('#scrMap').classList.add('hidden');$('#scrLevel').classList.remove('hidden');$('#bMap').classList.remove('hidden');
+  $('#lvTitle').innerHTML=`${LV[n].ico} ${n}. ${LV[n].name} <span>· ${LV[n].topic}</span>`;
+  newTask();
+}
+function wpick(list){const tot=list.reduce((a,b)=>a+b[1],0);let r=Math.random()*tot;for(const [g,w] of list){r-=w;if(r<0)return g;}return list[0][0];}
+function newTask(){
+  const list=cur.n===3?gens3():LV[cur.n].gens;let g,t=0;
+  do{g=wpick(list);t++;}while(t<20&&cur.hist.length>=2&&cur.hist.slice(-2).every(h=>h===g));
+  cur.hist.push(g);cur.task=g();cur.si=0;cur.failed=false;cur.allFirst=true;
+  renderStage();progress();
+}
+function stage(){return cur.task.stages[cur.si];}
+function progress(){
+  const L=S.lv[cur.n],g=S.goal;$('#progBar').style.width=Math.min(100,L.s/g*100)+'%';
+  $('#pCount').textContent=L.s>=g?`✅ ${g}/${g}`+(L.s>g?` · Bonus +${L.s-g}`:''):`${L.s} / ${g}`;
+}
+function slots(){return $$('#task .slot');}
+function renderStage(){
+  const st=stage();cur.tries=0;cur.done=false;cur.vals=(st.answers||[]).map(()=>'');cur.active=0;
+  const multi=cur.task.stages.length>1?`<span class="part">Teil ${cur.si+1}/${cur.task.stages.length}</span>`:'';
+  const t=$('#task');t.innerHTML=`<div class="kind">${cur.task.kind}${multi}</div>`+st.html;t.scrollTop=0;
+  slots().forEach(el=>el.addEventListener('click',()=>{if(!cur.done)setActive(+el.dataset.s);}));
+  if(st.mode==='plot')mountPlot(st);
+  const pw=$('#padwrap'),ac=$('#actions');
+  if(st.mode==='input'){
+    fb('','Tippe auf ein Kästchen und gib die Zahl ein. Für Kommazahlen nutze die Taste <b>,</b>');
+    const K=['7','8','9','⌫','4','5','6','C','1','2','3','⇥','0',','];
+    pw.innerHTML=`<div class="pad">${K.map(k=>`<button data-k="${k}" class="${k==='0'||k===','?'w2':''} ${'⌫C⇥'.includes(k)?'fn':''}">${k==='⇥'?'nächstes':k}</button>`).join('')}</div>`;
+    pw.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>key(b.dataset.k)));
+    ac.innerHTML=`<button class="act" id="bCheck">Prüfen ✓</button>`;
+  }else if(st.mode==='choice'){
+    fb('','Wähle die richtige Antwort.');
+    cur.ctries=st.choices.length>2?2:1;
+    pw.innerHTML=`<div class="choices ${st.long?'long':''}">${st.choices.map((c,i)=>`<button data-i="${i}">${c.t}</button>`).join('')}</div>`;
+    pw.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>choose(+b.dataset.i,b)));
+    ac.innerHTML='';
+  }else{
+    fb('','Tippe auf die Kreuzungspunkte im Koordinatensystem. Nochmal tippen entfernt einen Punkt.');
+    pw.innerHTML=`<button class="sbtn" id="bClr">Alle Punkte löschen</button>`;
+    $('#bClr').addEventListener('click',()=>{if(cur.done)return;st.picked.clear();st.mark={};st.redraw();});
+    ac.innerHTML=`<button class="act" id="bCheck">Prüfen ✓</button>`;
+  }
+  const bc=$('#bCheck');if(bc)bc.addEventListener('click',check);
+  updSlots();
+}
+function setActive(i){cur.active=i;updSlots();}
+function updSlots(){slots().forEach((el,i)=>{el.textContent=cur.vals[i]||'';el.classList.toggle('act',!cur.done&&i===cur.active);});}
+function fb(cls,html){const f=$('#fb');f.className=cls;f.innerHTML=html;f.scrollTop=0;}
+function key(k){
+  const st=stage();if(cur.done||st.mode!=='input')return;
+  if(k==='⇥'){setActive((cur.active+1)%cur.vals.length);return;}
+  let v=cur.vals[cur.active]||'';
+  if(k==='⌫')v=v.slice(0,-1);else if(k==='C')v='';
+  else if(k===','){if(!v.includes(','))v=(v===''?'0':v)+',';}
+  else{if(v.replace(',','').length<7)v=(v==='0'?'':v)+k;}
+  cur.vals[cur.active]=v;const el=slots()[cur.active];if(el)el.classList.remove('ok','bad');updSlots();
+}
+function check(){
+  if(cur.done)return next();
+  const st=stage();
+  if(st.mode==='input'){
+    if(cur.vals.some(v=>isNaN(num(v)))){fb('','Fülle zuerst alle Kästchen aus. 🙂');const i=cur.vals.findIndex(v=>isNaN(num(v)));setActive(i);return;}
+    const res=st.answers.map((a,i)=>same(num(cur.vals[i]),a));const els=slots();
+    res.forEach((ok,i)=>{els[i].classList.toggle('ok',ok);els[i].classList.toggle('bad',!ok);});
+    if(res.every(Boolean))return win();
+    cur.tries++;
+    if(cur.tries===1){const w=res.filter(x=>!x).length;fb('bad',`<b>Noch nicht ganz.</b> ${w===1?'Das rote Feld stimmt':'Die roten Felder stimmen'} noch nicht. Versuch es nochmal!`+(st.hint?`<div class="hint">💡 ${st.hint}</div>`:''));setActive(res.findIndex(x=>!x));}
+    else lose();
+  }else if(st.mode==='plot'){
+    if(st.picked.size===0){fb('','Tippe zuerst Punkte an.');return;}
+    st.mark={};let okAll=true;st.picked.forEach(p=>{const ok=st.target.has(p);st.mark[p]=ok?'ok':'bad';if(!ok)okAll=false;});
+    const missing=[...st.target].filter(p=>!st.picked.has(p)).length;if(missing)okAll=false;
+    st.redraw();
+    if(okAll)return win();
+    cur.tries++;
+    if(cur.tries===1){fb('bad',`<b>Noch nicht ganz.</b> `+(Object.values(st.mark).includes('bad')?'Rote Punkte liegen falsch. ':'')+(missing?`Es fehlen noch ${missing} Punkt(e).`:'')+(st.hint?`<div class="hint">💡 ${st.hint}</div>`:''));}
+    else lose();
+  }
+}
+function choose(i,btn){
+  if(cur.done)return;const st=stage(),c=st.choices[i];
+  if(c.ok){btn.classList.add('ok');$$('#padwrap .choices button').forEach(b=>b.disabled=true);return win();}
+  btn.classList.add('bad');btn.disabled=true;cur.tries++;
+  if(cur.tries<cur.ctries){fb('bad','<b>Leider falsch.</b> Versuch es nochmal!'+(st.hint?`<div class="hint">💡 ${st.hint}</div>`:''));return;}
+  $$('#padwrap .choices button').forEach((b,j)=>{b.disabled=true;if(st.choices[j].ok)b.classList.add('ok');});
+  lose();
+}
+function win(){
+  const st=stage();cur.done=true;const coins=cur.tries===0?3:1;if(cur.tries>0)cur.allFirst=false;
+  S.coins+=coins;save();hdr();updSlots();
+  if(st.mode==='plot')drawSolLine(st);
+  const last=cur.si===cur.task.stages.length-1;
+  fb('ok',`<div class="big">${pick(PRAISE)}</div>+${coins} 🪙`+(st.after?`<p>${st.after}</p>`:'')+(st.mode==='choice'&&st.sol?`<p>${st.sol}</p>`:''));
+  $('#actions').innerHTML=`<button class="act go" id="bNext">${last?'Nächste Aufgabe ➜':'Weiter zu Teil '+(cur.si+2)+' ➜'}</button>`;
+  $('#bNext').addEventListener('click',next);
+}
+function lose(){
+  const st=stage();cur.done=true;cur.failed=true;
+  if(st.mode==='input'){slots().forEach((el,i)=>{el.classList.remove('ok','bad','act');el.classList.add('sol');el.textContent=F(st.answers[i]);});}
+  if(st.mode==='plot'){st.target.forEach(p=>{if(!st.picked.has(p)){st.picked.add(p);}});st.target.forEach(p=>st.mark[p]=st.mark[p]==='ok'?'ok':'sol');st.redraw();drawSolLine(st);}
+  fb('sol',`<b>So geht's:</b><br>${st.sol||''}<p class="mut" style="margin-bottom:0">Diese Aufgabe zählt nicht – aber die nächste schaffst du!</p>`);
+  $('#actions').innerHTML=`<button class="act" id="bNext">Neue Aufgabe ➜</button>`;
+  $('#bNext').addEventListener('click',next);
+}
+function next(){
+  if(cur.failed)return newTask();
+  if(cur.si<cur.task.stages.length-1){cur.si++;renderStage();return;}
+  const L=S.lv[cur.n];L.s++;if(cur.allFirst)L.f++;
+  let finished=false;
+  if(L.s>=S.goal&&!L.d){L.d=true;finished=true;if(S.auto&&cur.n<5)S.unl[cur.n+1]=true;}
+  save();progress();
+  if(finished)levelDone(cur.n);else newTask();
+}
+
+/* ---------- PLOT ---------- */
+function mountPlot(st){
+  const svg=$('#task svg.plot'),g=svg.querySelector('.pg'),G=geo(st.o);st.picked=new Set();st.mark={};
+  const px=(i,j)=>[G.L+i/G.nx*G.pw,G.T+G.ph-j/G.ny*G.ph];
+  st.redraw=()=>{g.innerHTML=(st.line||'')+[...st.picked].map(p=>{const [i,j]=p.split(',').map(Number);const [x,y]=px(i,j);return `<circle cx="${x}" cy="${y}" r="9" class="pp ${st.mark[p]||''}"/>`;}).join('');};
+  st.px=px;st.G=G;
+  svg.addEventListener('pointerdown',e=>{
+    if(cur.done)return;e.preventDefault();
+    const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;const q=p.matrixTransform(svg.getScreenCTM().inverse());
+    const i=Math.round((q.x-G.L)/G.pw*G.nx),j=Math.round((G.T+G.ph-q.y)/G.ph*G.ny);
+    if(i<0||j<0||i>G.nx||j>G.ny)return;
+    const key=i+','+j;st.mark={};if(st.picked.has(key))st.picked.delete(key);else st.picked.add(key);st.redraw();
+  });
+}
+function drawSolLine(st){
+  const G=st.G,s=st.k/st.o.yv;let i2=G.nx,j2=s*G.nx;if(j2>G.ny){j2=G.ny;i2=G.ny/s;}
+  const [x1,y1]=st.px(0,0),[x2,y2]=st.px(i2,j2);
+  st.line=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="solline"/>`;st.redraw();
+}
+
+/* ---------- MODALS ---------- */
+function modal(html){$('#mbox').innerHTML=html;$('#modal').classList.remove('hidden');$('#mbox').scrollTop=0;}
+function closeModal(){$('#modal').classList.add('hidden');}
+function msgModal(t,txt){modal(`<h2>${t}</h2><p>${txt}</p><div class="mbtns"><button class="mbtn" id="mOk">OK</button></div>`);$('#mOk').onclick=closeModal;}
+function introModal(){
+  modal(`<h2>⚓ Willkommen an Bord!</h2>
+  <p>Die sagenhafte Schatzinsel <b>Proportia</b> steht auf keiner Karte. Nur wer an fünf Stationen die Rätsel der <b>proportionalen Zuordnungen</b> löst, bekommt alle fünf Kartenstücke – und findet den Schatz.</p>
+  <ul><li>An jeder Station löst du <b>${S.goal} Aufgaben</b>. Danach bekommst du ein Kartenstück 🗺️.</li><li>Richtig beim 1. Versuch: <b>3 🪙</b> · beim 2. Versuch: <b>1 🪙</b></li><li>Im <b>📜 Logbuch</b> findest du das Merkwissen.</li><li>Die Aufgaben sind jedes Mal neu – du kannst immer weiter üben.</li></ul>
+  <p><b>Wie heißt du, Kapitän/in?</b></p><input class="tin" id="nmIn" maxlength="30" placeholder="Vorname" value="${esc(S.name)}"><div class="err" id="nmErr"></div>
+  <div class="mbtns"><button class="mbtn" id="nmGo">Leinen los! ⛵</button></div>`);
+  $('#nmGo').onclick=()=>{const v=$('#nmIn').value.trim();if(!v){$('#nmErr').textContent='Bitte gib deinen Namen ein.';return;}S.name=v;S.intro=true;save();closeModal();showMap();};
+}
+function codeModal(n){
+  modal(`<h2>🔒 ${n}. ${LV[n].name}</h2><p>Diese Station ist noch gesperrt. ${S.auto?`Schließe zuerst Station ${n-1} ab – oder gib`:'Gib'} das Codewort ein, das du von deiner Lehrkraft bekommst.</p>
+  <input class="tin" id="cIn" autocomplete="off" autocapitalize="characters" placeholder="Codewort"><div class="err" id="cErr"></div>
+  <div class="mbtns"><button class="mbtn sec" id="cNo">Abbrechen</button><button class="mbtn" id="cGo">Freischalten</button></div>`);
+  $('#cNo').onclick=closeModal;
+  $('#cGo').onclick=()=>{const v=$('#cIn').value.trim().toUpperCase();
+    if(v===LV[n].code){S.unl[n]=true;save();closeModal();renderMap();openLevel(n);}
+    else if(v===TEACHER_PW){teacherPanel();}
+    else $('#cErr').textContent='Das Codewort stimmt leider nicht.';};
+}
+function logModal(n){
+  n=n||(cur?cur.n:1);
+  modal(`<h2>📜 Logbuch</h2><div class="tabs">${[1,2,3,4,5].map(i=>`<button data-n="${i}" class="${i===n?'on':''}">${i}. ${LV[i].topic}</button>`).join('')}</div><div>${LOG[n]}</div><div class="mbtns"><button class="mbtn" id="lgOk">Schließen</button></div>`);
+  $$('#mbox .tabs button').forEach(b=>b.onclick=()=>logModal(+b.dataset.n));$('#lgOk').onclick=closeModal;
+}
+function levelDone(n){
+  const st=stars(n);
+  modal(`<h2>🗺️ Kartenstück ${n} gefunden!</h2><p>Stark, ${esc(S.name)}! Du hast die Station <b>${LV[n].name}</b> geschafft.</p><p class="stars" style="font-size:40px;text-align:center;margin:8px 0">${starTxt(st)}</p>
+  <p style="text-align:center">${S.lv[n].f} von ${S.lv[n].s} Aufgaben im ersten Versuch richtig.</p>
+  ${n<5?(S.unl[n+1]?`<p>Die nächste Station <b>${LV[n+1].name}</b> ist jetzt offen.</p>`:`<p>Für die nächste Station brauchst du das Codewort deiner Lehrkraft.</p>`):`<p><b>Du hast alle Kartenstücke!</b> Die Schatzinsel wartet …</p>`}
+  <div class="mbtns"><button class="mbtn sec" id="dMore">Hier weiter üben</button><button class="mbtn" id="dMap">${n===5&&allDone()?'Zum Schatz! 💰':'Zur Karte 🗺️'}</button></div>`);
+  $('#dMore').onclick=()=>{closeModal();newTask();};
+  $('#dMap').onclick=()=>{closeModal();showMap();if(n===5&&allDone())showFinale();};
+}
+function showFinale(){
+  const d=new Date().toLocaleDateString('de-DE');
+  modal(`<div class="cert"><div style="font-size:54px">💰🏝️💰</div><h2 style="margin:6px 0">Urkunde</h2><div>Kapitän/in</div><div class="nm">${esc(S.name)}</div>
+  <div>hat alle Rätsel der proportionalen Zuordnungen gelöst und den <b>Schatz von Proportia</b> gefunden!</div>
+  <table class="ttab" style="margin:14px auto;max-width:420px">${[1,2,3,4,5].map(n=>`<tr><td>${LV[n].ico} ${LV[n].topic}</td><td class="stars">${starTxt(stars(n))}</td></tr>`).join('')}</table>
+  <div><b>${S.coins} 🪙</b> gesammelt · ${d}</div></div>
+  <div class="mbtns"><button class="mbtn" id="fOk">Zur Karte</button></div>`);
+  $('#fOk').onclick=()=>{closeModal();showMap();};
+}
+function teacherLogin(){
+  modal(`<h2>🔒 Lehrkraftmodus</h2><p>Bitte Passwort eingeben.</p><input class="tin" id="tIn" type="password" autocomplete="off"><div class="err" id="tErr"></div>
+  <div class="mbtns"><button class="mbtn sec" id="tNo">Abbrechen</button><button class="mbtn" id="tGo">Öffnen</button></div>`);
+  $('#tNo').onclick=closeModal;
+  const go=()=>{if($('#tIn').value.trim().toUpperCase()===TEACHER_PW)teacherPanel();else $('#tErr').textContent='Falsches Passwort.';};
+  $('#tGo').onclick=go;$('#tIn').addEventListener('keydown',e=>{if(e.key==='Enter')go();});
+}
+function teacherPanel(){
+  const rows=[1,2,3,4,5].map(n=>{const L=S.lv[n];return `<tr><td><b>${n}. ${LV[n].name}</b><br><span style="color:var(--mut)">${LV[n].topic}</span></td>
+    <td><button class="tog ${S.unl[n]?'on':'off'}" data-u="${n}">${S.unl[n]?'✓ offen':'gesperrt'}</button></td>
+    <td>${Math.min(L.s,S.goal)}/${S.goal}${L.s>S.goal?` (+${L.s-S.goal})`:''}<br><span class="stars" style="font-size:16px">${L.d?starTxt(stars(n)):''}</span></td>
+    <td>${LV[n].code||'–'}</td><td><button class="smallbtn" data-r="${n}">zurücksetzen</button></td></tr>`;}).join('');
+  modal(`<h2>👩‍🏫 Lehrkraftmodus</h2><p style="margin-top:0">Gerät von <b>${esc(S.name||'–')}</b> · ${S.coins} 🪙</p>
+  <table class="ttab"><tr><th>Station</th><th>Status</th><th>Fortschritt</th><th>Codewort</th><th></th></tr>${rows}</table>
+  <h3>Einstellungen</h3>
+  <p style="margin:6px 0">Aufgaben pro Station: <span class="seg">${[8,10,12,15,20].map(g=>`<button data-g="${g}" class="${S.goal===g?'on':''}">${g}</button>`).join('')}</span></p>
+  <p style="margin:6px 0">Nächste Station automatisch öffnen, wenn eine geschafft ist: <button class="tog ${S.auto?'on':'off'}" id="tAuto">${S.auto?'✓ an':'aus'}</button></p>
+  <div class="mbtns"><button class="mbtn sec" id="tAll">Alle öffnen</button><button class="mbtn sec" id="tLock">Alle sperren (außer 1)</button></div>
+  <div class="mbtns"><button class="mbtn sec" id="tName">Name ändern</button><button class="mbtn red" id="tReset">Alles zurücksetzen</button></div>
+  <div class="mbtns"><button class="mbtn" id="tClose">Schließen</button></div>`);
+  $$('#mbox [data-u]').forEach(b=>b.onclick=()=>{const n=+b.dataset.u;S.unl[n]=!S.unl[n];if(n===1)S.unl[1]=true;save();teacherPanel();});
+  $$('#mbox [data-r]').forEach(b=>b.onclick=()=>{const n=+b.dataset.r;if(confirm(`Fortschritt von Station ${n} zurücksetzen?`)){S.lv[n]={s:0,f:0,d:false};save();teacherPanel();}});
+  $$('#mbox [data-g]').forEach(b=>b.onclick=()=>{S.goal=+b.dataset.g;save();teacherPanel();});
+  $('#tAuto').onclick=()=>{S.auto=!S.auto;save();teacherPanel();};
+  $('#tAll').onclick=()=>{[1,2,3,4,5].forEach(n=>S.unl[n]=true);save();teacherPanel();};
+  $('#tLock').onclick=()=>{[2,3,4,5].forEach(n=>S.unl[n]=false);save();teacherPanel();};
+  $('#tName').onclick=()=>{introModal();};
+  $('#tReset').onclick=()=>{if(confirm('Wirklich den gesamten Fortschritt (inkl. Name und Münzen) löschen?')){S=defState();save();closeModal();showMap();introModal();}};
+  $('#tClose').onclick=()=>{closeModal();if(cur){if(!S.unl[cur.n])showMap();else progress();}else renderMap();hdr();};
+}
+
+/* ---------- START ---------- */
+$('#bMap').onclick=()=>showMap();
+$('#bLog').onclick=()=>logModal();
+$('#bTeach').onclick=()=>teacherLogin();
+document.addEventListener('keydown',e=>{
+  if(!$('#modal').classList.contains('hidden')||!cur)return;
+  const st=stage();
+  if(e.key==='Enter'){e.preventDefault();if(cur.done)next();else if(st.mode!=='choice')check();return;}
+  if(st.mode!=='input')return;
+  if(/^[0-9]$/.test(e.key))key(e.key);
+  else if(e.key===','||e.key==='.')key(',');
+  else if(e.key==='Backspace'){e.preventDefault();key('⌫');}
+  else if(e.key==='Tab'){e.preventDefault();key('⇥');}
+});
+hdr();showMap();
+if(!S.intro||!S.name)introModal();
+</script>
+</body>
+</html>
